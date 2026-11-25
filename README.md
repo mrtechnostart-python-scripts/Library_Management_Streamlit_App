@@ -50,7 +50,7 @@ The download reads all saved books from the selected collection without changing
 
 ### Book CSV format (version 1)
 
-This is the format to use for the next import milestone; importing is not implemented yet.
+Export and import use this book-only format. Import requires distinct book codes within the file and the destination collection.
 
 - Encoding: UTF-8 without a byte-order mark (BOM).
 - Exact header and column order: `BookName,BookCode,DateAdded`.
@@ -60,6 +60,22 @@ This is the format to use for the next import milestone; importing is not implem
 - SQL NULL and non-text values are not supported by this format. If any are found in these fields, the app shows an error instead of downloading a lossy file. No records are changed.
 
 Read the file as CSV, not by splitting lines or commas. For example, Python can use `csv.DictReader` with `open(path, encoding='utf-8', newline='')`. When opening it in a spreadsheet, explicitly import UTF-8 and treat all columns as text to preserve codes and dates. Spreadsheet programs may interpret values beginning with `=`, `+`, `-` or `@` as formulas. The export preserves those values rather than modifying them; do not enable formula evaluation for untrusted records.
+
+## Import book records from CSV
+
+1. Choose the destination under **Local collection**, then open **Add Books → Import book records**. Check the collection name and database filename.
+2. Upload a UTF-8 book CSV with the exact header `BookName,BookCode,DateAdded`. The app checks the entire file and the destination without adding books.
+3. Review the validation count, destination and first 20 books. Click **Confirm import into …** to add all books in one transaction. The success message identifies the saved collection.
+
+Import is additive. It never replaces books or changes issue/student records. Duplicate book codes within the file or already in the destination block the entire import, even if the other fields match. Errors identify the CSV record and code or malformed row; correct the file or choose the intended destination, then upload again. If validation or saving fails, no imported books are saved. Destination codes are rechecked under a SQLite write lock at confirmation.
+
+All fields remain text, including leading zeros, Unicode, whitespace, empty strings and dates as stored. Dates are not reformatted or required to be calendar dates. A single empty code is accepted as stored text; a second empty code is a duplicate. Export preserves duplicates in existing records, but those files must be corrected before import. UTF-8 files with a BOM are also accepted. Empty files and header-only exports cannot add books. CSV quoting must be valid and every book row must have exactly three fields.
+
+Switching collections discards the upload and preview, including when switching back. Upload and review the file again for the new destination. A successful import consumes the upload on the next page update. Imported books persist in the selected database after restarting.
+
+For a **fresh evaluation database**, download/extract a separate copy of the app into a new folder and, before running it, remove `library.db` from **that evaluation copy only**. Start the copy and keep **Existing library** selected: the missing file becomes an empty database. Import the exported books there. Do not remove your original database. **Sample collection** starts with three sample books and accepts additional books with distinct codes.
+
+This transfers book records only, not a full database backup.
 
 ## Your local database
 
@@ -87,4 +103,4 @@ python -m pip check
 python -m unittest discover -s tests -v
 ```
 
-The 24 tests use temporary copies of the app and database. They cover the ten original first-run cases, eight sample-collection cases, and six CSV export cases for text preservation, empty collections, refreshed downloads, unsupported values and isolation. Browser checks exercised the real menu, sample selection, an add → issue → restart → return flow, the narrow-screen sidebar, and completed CSV downloads from both collections and an empty collection. See the [first-run test record](docs/first-run-check.md), [sample collection test record](docs/sample-collection-check.md), and [CSV export test record](docs/csv-export-check.md) for scope and limits.
+The 38 tests use temporary copies of the app and database. They cover ten first-run cases, eight sample-collection cases, six CSV export cases, and fourteen import cases, including round trips, duplicate codes, malformed files, rollback, confirmation, persistence and isolation. Browser checks exercised the real menu, sample selection, an add → issue → restart → return flow, the narrow-screen sidebar, CSV downloads, and actual uploads and confirmations into both collections. See the [first-run test record](docs/first-run-check.md), [sample collection test record](docs/sample-collection-check.md), [CSV export test record](docs/csv-export-check.md), and [CSV import test record](docs/csv-import-check.md) for scope and limits.

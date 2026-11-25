@@ -5,6 +5,7 @@ import sqlite3
 import datetime
 import csv
 import io
+import hashlib
 from pathlib import Path
 
 def clear_collection_inputs():
@@ -12,6 +13,8 @@ def clear_collection_inputs():
     for key in list(st.session_state):
         if key.startswith('form_'):
             st.session_state[key] = ''
+    # A new uploader identity discards previews, even when switching back.
+    st.session_state['import_generation'] = st.session_state.get('import_generation', 0) + 1
 
 
 collection = st.sidebar.radio(
@@ -108,6 +111,123 @@ def exportBooks():
     )
 
 
+def parse_book_csv(data):
+    """Validate the entire export-shaped file without coercing any text."""
+    try:
+        text = data.decode('utf-8-sig')
+    except UnicodeDecodeError as error:
+        raise ValueError('Save the file as UTF-8 CSV and upload it again. No books were added.') from error
+    # csv.reader accepts quotes inside unquoted fields; reject that malformed syntax.
+    state = 'start'
+    line = 1
+    for char in text:
+        if state == 'quoted':
+            if char == '"':
+                state = 'closed'
+        elif state == 'closed':
+            if char == '"':
+                state = 'quoted'
+            elif char in ',\r\n':
+                state = 'start'
+            else:
+                raise ValueError(f'CSV line {line}: unexpected text after a closing quote. Check quoting.')
+        elif char == '"':
+            if state != 'start':
+                raise ValueError(f'CSV line {line}: quote inside an unquoted field. Check quoting.')
+            state = 'quoted'
+        elif char in ',\r\n':
+            state = 'start'
+        else:
+            state = 'unquoted'
+        if char == '\n':
+            line += 1
+    reader = csv.reader(io.StringIO(text, newline=''), strict=True)
+    try:
+        header = next(reader, None)
+        if header != list(BOOK_CSV_COLUMNS):
+            raise ValueError('The first row must be exactly BookName,BookCode,DateAdded in that order. '
+                             'Use the app’s book export and upload it again.')
+        rows = []
+        codes = {}
+        for number, row in enumerate(reader, start=2):
+            if len(row) != 3:
+                raise ValueError(f'CSV record {number} (ending on line {reader.line_num}): '
+                                 f'expected 3 fields, found {len(row)}. Check commas and quoting.')
+            if row[1] in codes:
+                raise ValueError(f'CSV record {number}: duplicate BookCode {row[1]!r}; '
+                                 f'also in record {codes[row[1]]}. Give each book a distinct code.')
+            codes[row[1]] = number
+            rows.append(tuple(row))
+    except csv.Error as error:
+        raise ValueError(f'CSV line {reader.line_num}: {error}. Check quoting and field length.') from error
+    if not rows:
+        raise ValueError('This file contains column names only. Export a collection with books to import.')
+    return rows
+
+
+def validate_book_destination(connection, rows):
+    existing = {row[0] for row in connection.execute('select BookCode from bookRec')}
+    for number, row in enumerate(rows, start=2):
+        if row[1] in existing:
+            raise ValueError(f'CSV record {number}: BookCode {row[1]!r} already exists in this collection. '
+                             'Remove that row or use a distinct code. No books were added.')
+
+
+def import_book_csv(connection, data):
+    rows = parse_book_csv(data)
+    # Lock before checking destination codes: another writer cannot slip in a duplicate.
+    # The app supplies an idle connection; do not commit an unrelated pending write.
+    if connection.in_transaction:
+        raise sqlite3.OperationalError('Import requires an idle connection')
+    try:
+        connection.execute('BEGIN IMMEDIATE')
+        validate_book_destination(connection, rows)
+        connection.executemany(
+            'insert into bookRec(BookName,BookCode,DateAdded) values(?,?,?)', rows)
+        connection.commit()
+    except Exception:
+        connection.rollback()
+        raise
+    return len(rows)
+
+
+def importBooks():
+    st.subheader('Import book records')
+    st.write(f'Destination: {collection} · {db_path.name}')
+    st.write('Upload a book CSV exported by the app. Import adds books only; existing records are never replaced. '
+             'Names, codes and dates stay as text. Every book code must be distinct.')
+    generation = st.session_state.get('import_generation', 0)
+    upload = st.file_uploader('Choose a book CSV', type=['csv'], key=f'book_upload_{generation}')
+    if upload is None:
+        return
+    data = upload.getvalue()
+    identity = f'{generation}_{hashlib.sha256(data).hexdigest()}'
+    try:
+        rows = parse_book_csv(data)
+        validate_book_destination(conn, rows)
+    except ValueError as error:
+        st.error(str(error))
+        return
+    except sqlite3.Error:
+        st.error('Could not check this collection. Check the database file and try again. No books were added.')
+        return
+    st.write(f'Validation passed: {len(rows)} books to add to {collection} · {db_path.name}.')
+    st.caption('Preview of the first 20 books. The entire file has been checked. Nothing is added until you confirm.')
+    st.dataframe(pd.DataFrame(rows[:20], columns=BOOK_CSV_COLUMNS), hide_index=True)
+    if st.button(f'Confirm import into {collection}', key=f'book_confirm_{identity}', type='primary'):
+        try:
+            count = import_book_csv(conn, data)
+        except ValueError as error:
+            st.error(str(error))
+        except sqlite3.Error:
+            st.error('Import could not be saved. No books were added. Check that the database is writable '
+                     'and not busy, then upload the file again.')
+        else:
+            st.success(f'Added {count} books to {collection} · {db_path.name}. Existing records were kept.')
+            # Consume this upload; a later click cannot import it twice.
+            st.session_state['import_generation'] = generation + 1
+
+
 # It add book
 
 def addBooks():
@@ -123,6 +243,7 @@ def addBooks():
         data = pd.DataFrame(c.fetchall(),columns=["BookName","BookCode","DateAdded"])
         st.dataframe(data)
     exportBooks()
+    importBooks()
 
 
 def deleteBooks():
