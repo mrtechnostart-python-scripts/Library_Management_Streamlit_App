@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.py[cod]
+# The existing library.db is tracked; keep newly created local DB sidecars private.
+*.db-journal
+*.db-wal
+*.db-shm

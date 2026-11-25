@@ -1,14 +1,16 @@
 import streamlit as st
-import numpy as np
 from streamlit_option_menu import option_menu
 import pandas as pd
 import sqlite3
 import datetime
-conn = sqlite3.connect('library.db')
-c=conn.cursor()
+from pathlib import Path
+
+# Keep the database beside the app, even when launched from another directory.
+conn = sqlite3.connect(Path(__file__).resolve().with_name('library.db'))
+c = conn.cursor()
 c.execute("create table if not exists libTab(CollegeID varchar(20),Course varchar(20),BookCode varchar(20),StudentName varchar(20),DateOfIssue varchar(20),ReturnDate varchar(20))")
-# c.execute(")
-# conn.commit()
+c.execute('create table if not exists bookRec(BookName Text,BookCode Text,DateAdded Text)')
+conn.commit()
 
 
 # Checks if the book exist in record
@@ -22,16 +24,7 @@ def inBookRec(BookCode):
 
 # Check if late and takes 10 rupee fine per day
 def isLate(ExpectedDate):
-    a = datetime.date.today()
-    date_object = datetime.datetime.strptime("{}".format(ExpectedDate), '%Y-%m-%d').date()
-    data = str(a-date_object)
-    newStr=""
-    for i in range(len(data)-15,-1,-1):
-        newStr+=data[i]
-    days = int(newStr[::-1])
-    if days < 0:
-        return True
-    return False
+    return fineCalc(ExpectedDate)[0] > 0
 
 # It add book
 
@@ -48,27 +41,23 @@ def addBooks():
         data = pd.DataFrame(c.fetchall(),columns=["BookName","BookCode","DateAdded"])
         st.dataframe(data)
 def deleteBooks():
-    bookName = st.text_input("Enter Book Code Here: ")
+    bookName = st.text_input("Enter Book Name Here: ")
     bookCode = st.text_input("Enter BookCode Here")
     btn = st.button("Delete Now!")
     if btn:
-        Query="delete from bookRec where BookName='{}' and BookCode='{}'".format(bookName,bookCode)
-        c.execute(Query)
+        c.execute('delete from bookRec where BookName=? and BookCode=?', (bookName, bookCode))
         conn.commit()
-        st.success("Records Deleted Successfully")
-        st.write("Updated Records")
+        if c.rowcount:
+            st.success("Records Deleted Successfully")
+        else:
+            st.warning("No matching book found.")
 
 
 # It calculate fine
 def fineCalc(ExpectedDate):
-    a = datetime.date.today()
-    date_object = datetime.datetime.strptime("{}".format(ExpectedDate), '%Y-%m-%d').date()
-    data = str(a-date_object)
-    newStr=""
-    for i in range(len(data)-15,-1,-1):
-        newStr+=data[i]
-    days = int(newStr[::-1])
-    return [days,days*10]
+    date_object = datetime.date.fromisoformat(str(ExpectedDate))
+    days = max(0, (datetime.date.today() - date_object).days)
+    return [days, days * 10]
 
 
 # It display All Records
@@ -103,25 +92,33 @@ def deleteRecords():
     bookCode = st.text_input("Enter BookCode Here")
     btn = st.button("Delete Now!")
     if btn:
-        c.execute("Select ReturnDate from libTab where CollegeID='{}' and BookCode='{}'".format(CollegeID,bookCode))
+        c.execute('Select ReturnDate from libTab where CollegeID=? and BookCode=?', (CollegeID, bookCode))
         data = c.fetchall()
+        if not data:
+            st.warning("No matching issue record found.")
+            return
         expectedReturn = data[0][0]
-        if isLate(expectedReturn):
-            Query="delete from libTab where CollegeID='{}' and BookCode='{}'".format(CollegeID,bookCode)
-            c.execute(Query)
+        try:
+            late = isLate(expectedReturn)
+        except (TypeError, ValueError):
+            st.error("The saved return date must use YYYY-MM-DD. Check the record before deleting it.")
+            return
+        if late:
+            days, fine = fineCalc(expectedReturn)
+            st.write("## You pay fine {} INR as You are {} days late".format(fine, days))
+        else:
+            c.execute('delete from libTab where CollegeID=? and BookCode=?', (CollegeID, bookCode))
             conn.commit()
             st.success("Records Deleted Successfully")
             st.write("Updated Records")
             st.dataframe(displayRec())
-        else:
-            st.write("## You pay fine {} INR as You are {} days late".format(fineCalc(expectedReturn)[1],fineCalc(expectedReturn)[0]))
 def letter():
     st.title("Library Management Program")
     st.subheader("Dashboard")
     selected = option_menu(
         menu_title="Main Menu",
         options=["Home","Add Books","Delete Books","Issue Book","Delete Records","About"],
-        icons=["house","book","envelop","contact"],
+        icons=["house", "book", "trash", "journal-arrow-up", "journal-x", "info-circle"],
         menu_icon="cast",
         orientation="horizontal"
         )
@@ -137,4 +134,8 @@ def letter():
         addBooks()
     if selected == "About":
         st.write(" About Here! ")
-letter()
+
+try:
+    letter()
+finally:
+    conn.close()
