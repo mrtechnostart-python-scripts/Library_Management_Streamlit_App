@@ -3,6 +3,8 @@ from streamlit_option_menu import option_menu
 import pandas as pd
 import sqlite3
 import datetime
+import csv
+import io
 from pathlib import Path
 
 def clear_collection_inputs():
@@ -66,6 +68,46 @@ def inBookRec(BookCode):
 def isLate(ExpectedDate):
     return fineCalc(ExpectedDate)[0] > 0
 
+BOOK_CSV_COLUMNS = ('BookName', 'BookCode', 'DateAdded')
+
+
+def book_records_csv(connection):
+    # Explicit fields and row order keep this format stable for a future importer.
+    rows = connection.execute(
+        'select BookName, BookCode, DateAdded from bookRec order by rowid'
+    ).fetchall()
+    if any(not isinstance(value, str) for row in rows for value in row):
+        raise ValueError('Some book fields are not text (for example, NULL or binary data). '
+                         'Check BookName, BookCode and DateAdded in the selected database '
+                         'before exporting. No records were changed.')
+    output = io.StringIO(newline='')
+    writer = csv.writer(output, lineterminator='\r\n')
+    writer.writerow(BOOK_CSV_COLUMNS)
+    writer.writerows(rows)
+    return output.getvalue().encode('utf-8'), len(rows)
+
+
+def exportBooks():
+    st.subheader('Export book records')
+    st.write(f'Exporting: {collection} · {db_path.name}')
+    st.write('This CSV contains book names, codes and dates added. '
+             'It does not include issue or student records and is not a full database backup.')
+    try:
+        data, count = book_records_csv(conn)
+    except ValueError as error:
+        st.error(str(error))
+        return
+    st.caption(f'{count} book record' + ('. ' if count == 1 else 's. ') +
+               ('The empty collection downloads column names only.' if count == 0 else
+                'All saved books in this collection are included.'))
+    st.download_button(
+        f'Download {collection} books as CSV', data=data,
+        file_name='sample-collection-books.csv' if sample_mode else 'existing-library-books.csv',
+        mime='text/csv; charset=utf-8', key=f'book_export_{sample_mode}',
+        on_click='ignore',
+    )
+
+
 # It add book
 
 def addBooks():
@@ -80,6 +122,9 @@ def addBooks():
         c.execute('Select * from bookRec')
         data = pd.DataFrame(c.fetchall(),columns=["BookName","BookCode","DateAdded"])
         st.dataframe(data)
+    exportBooks()
+
+
 def deleteBooks():
     bookName = st.text_input("Enter Book Name Here: ", key='form_3')
     bookCode = st.text_input("Enter BookCode Here", key='form_4')

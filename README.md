@@ -42,6 +42,25 @@ Every new app session starts on **Existing library**, preserving the original de
 
 The app saves the issue date and a return date seven days later. **Delete Books** removes books by name and code. **Delete Records** removes issue records by college ID and book code when they are not overdue. For overdue records, it displays a fine of 10 INR per day and keeps the record; payment handling is not implemented.
 
+## Export book records to CSV
+
+Choose **Existing library** or **Sample collection** in the sidebar, then open **Add Books → Export book records**. Check the collection name and database filename above the download button. Click **Download … books as CSV** to save `existing-library-books.csv` or `sample-collection-books.csv`.
+
+The download reads all saved books from the selected collection without changing records or opening the other database. An empty collection downloads a header-only file. After adding or deleting books, the next download reflects the saved records. This exports books only—not issue records, student details, or a full database backup.
+
+### Book CSV format (version 1)
+
+This is the format to use for the next import milestone; importing is not implemented yet.
+
+- Encoding: UTF-8 without a byte-order mark (BOM).
+- Exact header and column order: `BookName,BookCode,DateAdded`.
+- Delimiter: comma. Fields containing commas, quotes or line breaks are enclosed in double quotes; embedded double quotes are doubled. Record separators are CRLF.
+- Every row contains the three stored text values, unchanged, including whitespace, Unicode, embedded line breaks, empty strings, leading zeros and duplicates. Rows follow SQLite insertion order (`rowid`); internal IDs are not exported.
+- `DateAdded` is exported as stored, without validation or reformatting. The app writes `YYYY-MM-DD` when adding a book.
+- SQL NULL and non-text values are not supported by this format. If any are found in these fields, the app shows an error instead of downloading a lossy file. No records are changed.
+
+Read the file as CSV, not by splitting lines or commas. For example, Python can use `csv.DictReader` with `open(path, encoding='utf-8', newline='')`. When opening it in a spreadsheet, explicitly import UTF-8 and treat all columns as text to preserve codes and dates. Spreadsheet programs may interpret values beginning with `=`, `+`, `-` or `@` as formulas. The export preserves those values rather than modifying them; do not enable formula evaluation for untrusted records.
+
 ## Your local database
 
 The app opens `library.db` beside `Library.py`, not in an unrelated terminal folder. This repository already includes a database with three book records. Startup keeps those records. If the file is absent, the app creates the two empty tables it needs.
@@ -68,4 +87,4 @@ python -m pip check
 python -m unittest discover -s tests -v
 ```
 
-The 18 tests use temporary copies of the app and database. They cover the ten original first-run cases plus sample isolation, repeated initialization, restart persistence, collection switching, and linked-file protection. Browser checks exercised the real menu, sample selection, an add → issue → restart → return flow, and the narrow-screen sidebar. See the [first-run test record](docs/first-run-check.md) and [sample collection test record](docs/sample-collection-check.md) for scope and limits.
+The 24 tests use temporary copies of the app and database. They cover the ten original first-run cases, eight sample-collection cases, and six CSV export cases for text preservation, empty collections, refreshed downloads, unsupported values and isolation. Browser checks exercised the real menu, sample selection, an add → issue → restart → return flow, the narrow-screen sidebar, and completed CSV downloads from both collections and an empty collection. See the [first-run test record](docs/first-run-check.md), [sample collection test record](docs/sample-collection-check.md), and [CSV export test record](docs/csv-export-check.md) for scope and limits.
