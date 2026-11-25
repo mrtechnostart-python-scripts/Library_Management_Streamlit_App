@@ -26,11 +26,19 @@ On Windows, the equivalent environment commands are `py -3.13 -m venv .venv` and
 
 SQLite comes with Python; there is no separate database installation or hosted account to create.
 
-## Try a book record
+## Try a separate sample collection
 
-1. Open **Add Books**, enter a book name and a code, then click **Add Now!**.
-2. Click **Display All** to view saved books.
-3. Open **Issue Book** and enter a college ID, course, the same book code, and a student name. Click **Submit**, then **Display Records**.
+Run `streamlit run Library.py`, then choose **Sample collection** under **Local collection** in the sidebar. On a narrow screen, open the sidebar first. This creates `library-sample.db` beside the app with three sample books. In this mode the app does not open or change `library.db`.
+
+1. Open **Add Books**, enter `My Test Book` and code `TRY-001`, then click **Add Now!**. Click **Display All** to see the three sample books and your new book.
+2. Open **Issue Book**. Enter college ID `TEST-001`, course `Reading`, book code `TRY-001`, and student name `Sample Reader`. Click **Submit**, then **Display Records** to see the saved issue.
+3. Stop the app with `Ctrl+C` and run `streamlit run Library.py` again. Choose **Sample collection** again. **Add Books → Display All** and **Issue Book → Display Records** show the saved book and issue.
+4. To return the book before it is overdue, open **Delete Records**, enter college ID `TEST-001` and book code `TRY-001`, then click **Delete Now!**. The issue disappears; the book stays in the collection.
+5. Restart and choose **Sample collection** once more. The book remains in **Display All** and the returned issue is absent from **Display Records**.
+
+Use a different book code and college ID if you repeat the walkthrough; duplicate entries are not prevented. Sample initialization happens only once. Your additions, deletions, and issues survive restarts. To start over, stop the app and remove **only `library-sample.db`**; the next sample selection creates fresh sample records. This file is ignored by Git.
+
+Every new app session starts on **Existing library**, preserving the original default. Choose **Sample collection** before entering test records. The sidebar identifies the active file on every page; switching collections clears unfinished form entries.
 
 The app saves the issue date and a return date seven days later. **Delete Books** removes books by name and code. **Delete Records** removes issue records by college ID and book code when they are not overdue. For overdue records, it displays a fine of 10 INR per day and keeps the record; payment handling is not implemented.
 
@@ -38,7 +46,7 @@ The app saves the issue date and a return date seven days later. **Delete Books*
 
 The app opens `library.db` beside `Library.py`, not in an unrelated terminal folder. This repository already includes a database with three book records. Startup keeps those records. If the file is absent, the app creates the two empty tables it needs.
 
-Use test records while evaluating. Copy the project to a separate folder before experimenting with an existing database, and keep a copy of any data you need. The database file is tracked in this repository: do not commit personal records or attach your database to a public issue.
+Use **Sample collection** while evaluating. **Existing library** uses the original `library.db` path and updates those records when you submit changes. Keep a copy of any existing data you need before editing it. The original database file is tracked in this repository: do not commit personal records or attach either database to a public issue.
 
 This is a lightweight local project, not a full institutional library system. Empty or duplicate entries are not prevented, book availability is not enforced, and the About page is a placeholder. The current checks do not establish suitability for real patron data or multi-user operation.
 
@@ -60,4 +68,4 @@ python -m pip check
 python -m unittest discover -s tests -v
 ```
 
-The ten regression tests use temporary copies of the app and database. They cover empty-database startup on all pages, book addition/display/deletion, issue creation/display, missing records, due-date handling, invalid saved dates, and preservation of the included database. Browser checks also exercised the real menu and an add → issue → delete-issue flow. See [the first-run test record](docs/first-run-check.md) for scope and limits.
+The 18 tests use temporary copies of the app and database. They cover the ten original first-run cases plus sample isolation, repeated initialization, restart persistence, collection switching, and linked-file protection. Browser checks exercised the real menu, sample selection, an add → issue → restart → return flow, and the narrow-screen sidebar. See the [first-run test record](docs/first-run-check.md) and [sample collection test record](docs/sample-collection-check.md) for scope and limits.

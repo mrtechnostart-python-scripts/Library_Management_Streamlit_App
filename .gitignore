@@ -5,3 +5,5 @@ __pycache__/
 *.db-journal
 *.db-wal
 *.db-shm
+# Local evaluator collection; never commit sample edits or patron records.
+library-sample.db
