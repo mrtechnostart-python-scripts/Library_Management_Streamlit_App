@@ -9,4 +9,14 @@ This repository is worked on by a Brainer team. This file is on `brainer/work`, 
 - **One pull request.** The team's work comes to `master` as a pull request from `brainer/work`. Only the owner merges it; the team never does. Once it's merged, `brainer/work` starts again from `master`.
 - **Your own changes stay yours.** The team brings in what changes on the default branch before it builds on it.
 
+## What this is
+
+**Library Management Streamlit App**
+
+Simple Library Management Streamlit App, that uses sqlite3 for database management
+
+## What the code says
+
+- Built with: python
+
 Repository: mrtechnostart-python-scripts/Library_Management_Streamlit_App
