@@ -7,6 +7,59 @@ import csv
 import io
 import hashlib
 from pathlib import Path
+from urllib.parse import urlencode
+
+# Bump this version when shipping app behavior changes; works in ZIP downloads too.
+APP_VERSION = '0.2.0'
+FEEDBACK_DESTINATION = (
+    'https://github.com/mrtechnostart-python-scripts/'
+    'Library_Management_Streamlit_App/issues/new'
+)
+
+
+def feedback_links(collection_mode):
+    """Only explicit, non-personal app context may enter an external URL."""
+    if collection_mode not in ('Existing library', 'Sample collection'):
+        raise ValueError('Unknown collection mode')
+    version = f'Library Management Streamlit App {APP_VERSION}'
+    context = f'App version: {APP_VERSION}\nCollection mode: {collection_mode}'
+    form = FEEDBACK_DESTINATION + '?' + urlencode({
+        'template': 'app-feedback.yml', 'versions': version,
+        'collection-mode': collection_mode,
+    })
+    body = (
+        f'{context}\n\n'
+        '## What are you reporting?\n'
+        '(Setup/startup failure, task problem, or feedback on a task that worked)\n\n'
+        '## Operating system, Python and dependency versions\n\n'
+        '## What did you try?\n(Use test values, not personal records.)\n\n'
+        '## What did you expect?\n\n'
+        '## What actually happened?\n\n'
+        '## Error messages\n(Remove personal details, secrets and local file paths.)\n\n'
+        '## Which database did you use?\n'
+        '(Included, new empty, your own existing, or app did not start)\n'
+    )
+    fallback = FEEDBACK_DESTINATION + '?' + urlencode({
+        'title': '[Feedback]: ', 'body': body,
+    })
+    return context, form, fallback
+
+
+def show_feedback(collection_mode):
+    context, form, fallback = feedback_links(collection_mode)
+    with st.sidebar.expander('Report a problem or share feedback'):
+        st.write('Report a setup problem or tell us what happened when you tried a task.')
+        st.code(context, language=None)
+        st.write('The links include only this app version and collection mode. '
+                 'No book records, student data or local file paths are attached. '
+                 'GitHub issues are public; remove personal details, secrets and paths '
+                 'from anything you add. A GitHub account is needed to submit.')
+        st.link_button('Open GitHub feedback form', form)
+        st.write('If the form is unavailable, it may still be awaiting merge from '
+                 'the review branch. Use the plain issue below; it includes the same prompts. '
+                 'If GitHub does not fill the context, copy it from above.')
+        st.link_button('Open plain GitHub issue instead', fallback)
+
 
 def clear_collection_inputs():
     # Do not carry unfinished book/student entries into the other collection.
@@ -22,6 +75,8 @@ collection = st.sidebar.radio(
     key='collection', on_change=clear_collection_inputs,
 )
 sample_mode = collection == 'Sample collection'
+# Render before database access, so database startup problems keep a feedback route.
+show_feedback(collection)
 # Keep both databases beside the app, even when launched from another directory.
 real_path = Path(__file__).resolve().with_name('library.db')
 db_path = real_path.with_name('library-sample.db') if sample_mode else real_path

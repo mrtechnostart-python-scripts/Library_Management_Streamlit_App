@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for trying Library Management Streamlit App. Include enough detail to repeat the problem. Do not share patron or student details, passwords, or your database file.
+        Thanks for trying Library Management Streamlit App. Include enough detail to repeat the problem. GitHub issues are public. Do not share book records, patron or student details, passwords, local file paths, or your database file.
   - type: dropdown
     id: feedback-type
     attributes:
@@ -28,7 +28,14 @@ body:
     id: versions
     attributes:
       label: App revision and dependency versions
-      description: Include the commit or download date and the output of python -m pip show streamlit pandas streamlit-option-menu, if installation completed.
+      description: Keep the app version filled by the app link, or copy it from the sidebar feedback panel. Include the commit or download date if known and the output of python -m pip show streamlit pandas streamlit-option-menu, if installation completed.
+    validations:
+      required: true
+  - type: input
+    id: collection-mode
+    attributes:
+      label: Selected collection mode
+      description: Keep the mode filled by the app link, or enter Existing library, Sample collection, or App did not start.
     validations:
       required: true
   - type: textarea

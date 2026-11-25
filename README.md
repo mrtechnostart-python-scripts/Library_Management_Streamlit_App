@@ -85,6 +85,14 @@ Use **Sample collection** while evaluating. **Existing library** uses the origin
 
 This is a lightweight local project, not a full institutional library system. Empty or duplicate entries are not prevented, book availability is not enforced, and the About page is a placeholder. The current checks do not establish suitability for real patron data or multi-user operation.
 
+## Share feedback from the app
+
+Open **Report a problem or share feedback** in the sidebar on any page. On a narrow screen, open the sidebar first. The panel shows the app version (`0.2.0`) and your selected collection mode. Choose **Open GitHub feedback form** to report a setup problem, a task that failed, or feedback on a task that worked.
+
+The link fills the app version and collection mode only. It never attaches book records, student data, local paths, database files, uploads or form entries. GitHub issues are public and need a GitHub account to submit. Use test values when describing steps; remove personal information, secrets and local paths from errors or screenshots you add yourself. Nothing is submitted by opening the link.
+
+GitHub loads issue forms from the default branch. While this change is awaiting founder review and merge, the structured form may be unavailable. Choose **Open plain GitHub issue instead** for the same reporting prompts and context. If GitHub does not prefill the context, copy it from the panel. If the app cannot start at all, use the repository feedback link under Setup help and describe the commit or download date and that the app did not start.
+
 ## Setup help
 
 - **`streamlit` is not found:** activate `.venv` in this terminal and run `python -m pip install -r requirements.txt` again. You can also launch with `python -m streamlit run Library.py`.
@@ -103,4 +111,4 @@ python -m pip check
 python -m unittest discover -s tests -v
 ```
 
-The 38 tests use temporary copies of the app and database. They cover ten first-run cases, eight sample-collection cases, six CSV export cases, and fourteen import cases, including round trips, duplicate codes, malformed files, rollback, confirmation, persistence and isolation. Browser checks exercised the real menu, sample selection, an add → issue → restart → return flow, the narrow-screen sidebar, CSV downloads, and actual uploads and confirmations into both collections. See the [first-run test record](docs/first-run-check.md), [sample collection test record](docs/sample-collection-check.md), [CSV export test record](docs/csv-export-check.md), and [CSV import test record](docs/csv-import-check.md) for scope and limits.
+The 44 tests use temporary copies of the app and database. They cover ten first-run cases, eight sample-collection cases, six CSV export cases, fourteen import cases, and six feedback cases, including round trips, duplicate codes, malformed files, rollback, confirmation, persistence, isolation and privacy-safe feedback links. Browser checks exercised the real menu, sample selection, an add → issue → restart → return flow, the narrow-screen sidebar, CSV downloads, and actual uploads and confirmations into both collections. See the [first-run test record](docs/first-run-check.md), [sample collection test record](docs/sample-collection-check.md), [CSV export test record](docs/csv-export-check.md), [CSV import test record](docs/csv-import-check.md), and [in-app feedback test record](docs/app-feedback-check.md) for scope and limits.
