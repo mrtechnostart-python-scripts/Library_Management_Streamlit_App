@@ -10,7 +10,7 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 # Bump this version when shipping app behavior changes; works in ZIP downloads too.
-APP_VERSION = '0.2.0'
+APP_VERSION = '0.3.0'
 FEEDBACK_DESTINATION = (
     'https://github.com/mrtechnostart-python-scripts/'
     'Library_Management_Streamlit_App/issues/new'
@@ -61,11 +61,16 @@ def show_feedback(collection_mode):
         st.link_button('Open plain GitHub issue instead', fallback)
 
 
+def clear_book_query():
+    st.session_state['book_query'] = ''
+
+
 def clear_collection_inputs():
     # Do not carry unfinished book/student entries into the other collection.
     for key in list(st.session_state):
         if key.startswith('form_'):
             st.session_state[key] = ''
+    clear_book_query()
     # A new uploader identity discards previews, even when switching back.
     st.session_state['import_generation'] = st.session_state.get('import_generation', 0) + 1
 
@@ -143,6 +148,41 @@ def book_records_csv(connection):
     writer.writerow(BOOK_CSV_COLUMNS)
     writer.writerows(rows)
     return output.getvalue().encode('utf-8'), len(rows)
+
+
+def find_book_records(connection, query):
+    """Literal, Unicode case-insensitive search; keep stored values and row order."""
+    rows = connection.execute(
+        'select BookName, BookCode, DateAdded from bookRec order by rowid'
+    ).fetchall()
+    needle = query.casefold()
+    matches = [row for row in rows if not needle or any(
+        isinstance(value, str) and needle in value.casefold() for value in row[:2]
+    )]
+    return matches, len(rows)
+
+
+def findBooks():
+    st.subheader('Find books')
+    st.write(f'Searching: {collection} · {db_path.name}')
+    st.write('Search any part of a book code or title, ignoring upper and lower case. '
+             'Spaces and punctuation match literally. Leave the query empty to see all books.')
+    query = st.text_input('Book code or title', key='book_query')
+    st.button('Clear search', on_click=clear_book_query, disabled=query == '')
+    try:
+        rows, total = find_book_records(conn, query)
+    except sqlite3.Error:
+        st.error('Could not read this collection. Check the database file and try again.')
+        return
+    if not total:
+        st.info('No books in this collection yet. Add a book or import a book CSV in Add Books.')
+    elif not rows:
+        st.info('No books match this query in the selected collection. '
+                'Try another code or title, or clear the search to see all books.')
+    else:
+        st.caption(f'{len(rows)} of {total} book records · ' +
+                   ('Matching books' if query else 'All books'))
+        st.dataframe(pd.DataFrame(rows, columns=BOOK_CSV_COLUMNS), hide_index=True)
 
 
 def exportBooks():
@@ -378,8 +418,8 @@ def letter():
     st.subheader("Dashboard")
     selected = option_menu(
         menu_title="Main Menu",
-        options=["Home","Add Books","Delete Books","Issue Book","Delete Records","About"],
-        icons=["house", "book", "trash", "journal-arrow-up", "journal-x", "info-circle"],
+        options=["Home","Find Books","Add Books","Delete Books","Issue Book","Delete Records","About"],
+        icons=["house", "search", "book", "trash", "journal-arrow-up", "journal-x", "info-circle"],
         menu_icon="cast",
         orientation="horizontal"
         )
@@ -393,6 +433,8 @@ def letter():
             st.write('Stop and restart the app, then choose Sample collection again. '
                      'Display All shows your saved book; Display Records shows any remaining issues. '
                      'Sample books are added only on first use, not on every restart.')
+    if selected == "Find Books":
+        findBooks()
     if selected=="Issue Book":
         issueBook()
     if selected == "Delete Books":

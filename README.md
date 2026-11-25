@@ -20,7 +20,7 @@ python -m pip check
 streamlit run Library.py
 ```
 
-Open the **Local URL** printed in the terminal (normally `http://localhost:8501`). You should see **Library Management Program**, **Dashboard**, and the six-page menu. Select **Add Books** to see the page pictured above. Stop the app with `Ctrl+C`.
+Open the **Local URL** printed in the terminal (normally `http://localhost:8501`). You should see **Library Management Program**, **Dashboard**, and the seven-page menu. Select **Add Books** to see the page pictured above. Stop the app with `Ctrl+C`.
 
 On Windows, the equivalent environment commands are `py -3.13 -m venv .venv` and `.venv\Scripts\Activate.ps1` in PowerShell. Then use the same `python -m pip …` and `streamlit run Library.py` commands. Windows setup has not been tested.
 
@@ -41,6 +41,16 @@ Use a different book code and college ID if you repeat the walkthrough; duplicat
 Every new app session starts on **Existing library**, preserving the original default. Choose **Sample collection** before entering test records. The sidebar identifies the active file on every page; switching collections clears unfinished form entries.
 
 The app saves the issue date and a return date seven days later. **Delete Books** removes books by name and code. **Delete Records** removes issue records by college ID and book code when they are not overdue. For overdue records, it displays a fine of 10 INR per day and keeps the record; payment handling is not implemented.
+
+## Find a book by code or title
+
+Choose **Existing library** or **Sample collection** in the sidebar, then open **Find Books**. The page identifies the collection and database file being searched.
+
+Enter any part of a book code or title in **Book code or title**, then press Enter or leave the input to apply it. Search checks both fields, ignoring upper and lower case with Unicode case folding (for example, `STRASSE` matches `Straße`). Spaces and punctuation are literal, not wildcards: `%`, `_`, quotes and leading zeros keep their meaning. Saved titles containing Unicode or line breaks can be found by a matching part of the title. Dates and issue/student records are not searched.
+
+Matching books show their saved `BookName`, `BookCode` and `DateAdded`, with a result count. Duplicate records remain separate rows in insertion order. If nothing matches, the page suggests another query or clearing it; an empty collection has its own message. Click **Clear search** or empty the input to see every book again, including records with empty titles or codes. Switching collections clears the query and shows only the newly selected collection.
+
+Search and clearing do not change saved records or open the other database. Results refresh on each page update, including after adding, deleting or importing books. This lightweight search reads the selected book table and filters it locally; large-collection performance has not been measured.
 
 ## Export book records to CSV
 
@@ -87,7 +97,7 @@ This is a lightweight local project, not a full institutional library system. Em
 
 ## Share feedback from the app
 
-Open **Report a problem or share feedback** in the sidebar on any page. On a narrow screen, open the sidebar first. The panel shows the app version (`0.2.0`) and your selected collection mode. Choose **Open GitHub feedback form** to report a setup problem, a task that failed, or feedback on a task that worked.
+Open **Report a problem or share feedback** in the sidebar on any page. On a narrow screen, open the sidebar first. The panel shows the app version (`0.3.0`) and your selected collection mode. Choose **Open GitHub feedback form** to report a setup problem, a task that failed, or feedback on a task that worked.
 
 The link fills the app version and collection mode only. It never attaches book records, student data, local paths, database files, uploads or form entries. GitHub issues are public and need a GitHub account to submit. Use test values when describing steps; remove personal information, secrets and local paths from errors or screenshots you add yourself. Nothing is submitted by opening the link.
 
@@ -111,4 +121,4 @@ python -m pip check
 python -m unittest discover -s tests -v
 ```
 
-The 44 tests use temporary copies of the app and database. They cover ten first-run cases, eight sample-collection cases, six CSV export cases, fourteen import cases, and six feedback cases, including round trips, duplicate codes, malformed files, rollback, confirmation, persistence, isolation and privacy-safe feedback links. Browser checks exercised the real menu, sample selection, an add → issue → restart → return flow, the narrow-screen sidebar, CSV downloads, and actual uploads and confirmations into both collections. See the [first-run test record](docs/first-run-check.md), [sample collection test record](docs/sample-collection-check.md), [CSV export test record](docs/csv-export-check.md), [CSV import test record](docs/csv-import-check.md), and [in-app feedback test record](docs/app-feedback-check.md) for scope and limits.
+The 51 tests use temporary copies of the app and database. They cover ten first-run cases, eight sample-collection cases, six CSV export cases, fourteen import cases, six feedback cases, and seven book-search cases, including round trips, duplicate codes, malformed files, rollback, confirmation, persistence, isolation, privacy-safe feedback links, Unicode/literal search, empty results and clearing. Browser checks exercised the real menu, sample selection, an add → issue → restart → return flow, the narrow-screen sidebar, CSV downloads, and actual uploads and confirmations into both collections. See the [first-run test record](docs/first-run-check.md), [sample collection test record](docs/sample-collection-check.md), [CSV export test record](docs/csv-export-check.md), [CSV import test record](docs/csv-import-check.md), and [in-app feedback test record](docs/app-feedback-check.md) for scope and limits. The [book search test record](docs/book-search-check.md) covers browser searches, CSV-imported Unicode text, collection switching, empty results and phone-width use.

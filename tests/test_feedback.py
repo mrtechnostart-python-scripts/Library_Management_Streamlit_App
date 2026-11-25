@@ -38,14 +38,14 @@ class FeedbackTests(unittest.TestCase):
                 app = self.app(mode)
                 self.assertFalse(app.exception)
                 self.assertEqual(app.sidebar.code[0].value,
-                                 f'App version: 0.2.0\nCollection mode: {mode}')
+                                 f'App version: 0.3.0\nCollection mode: {mode}')
                 form, fallback = self.links(app)
                 self.assertEqual(urlsplit(form).netloc, 'github.com')
                 self.assertEqual(urlsplit(form).path,
                                  '/mrtechnostart-python-scripts/Library_Management_Streamlit_App/issues/new')
                 self.assertEqual(parse_qs(urlsplit(form).query), {
                     'template': ['app-feedback.yml'],
-                    'versions': ['Library Management Streamlit App 0.2.0'],
+                    'versions': ['Library Management Streamlit App 0.3.0'],
                     'collection-mode': [mode],
                 })
                 body = parse_qs(urlsplit(fallback).query)['body'][0]
@@ -93,7 +93,7 @@ class FeedbackTests(unittest.TestCase):
         self.assertIn('Existing library', app.sidebar.code[0].value)
 
     def test_every_menu_page_has_feedback(self):
-        for name in ('Home', 'Add Books', 'Delete Books', 'Issue Book', 'Delete Records', 'About'):
+        for name in ('Home', 'Find Books', 'Add Books', 'Delete Books', 'Issue Book', 'Delete Records', 'About'):
             with self.subTest(page=name), patch('streamlit_option_menu.option_menu', return_value=name):
                 app = self.app()
                 self.assertFalse(app.exception)
