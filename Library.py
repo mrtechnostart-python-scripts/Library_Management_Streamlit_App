@@ -10,23 +10,33 @@ from pathlib import Path
 from urllib.parse import urlencode
 
 # Bump this version when shipping app behavior changes; works in ZIP downloads too.
-APP_VERSION = '0.3.0'
+APP_VERSION = '0.4.0'
+GUIDED_TASK = 'Guided sample trial: add a book in Add Books, then find it by code in Find Books.'
+TRIAL_BOOK_NAME = 'My Trial Book'
 FEEDBACK_DESTINATION = (
     'https://github.com/mrtechnostart-python-scripts/'
     'Library_Management_Streamlit_App/issues/new'
 )
 
 
-def feedback_links(collection_mode):
-    """Only explicit, non-personal app context may enter an external URL."""
+def feedback_links(collection_mode, attempted_task=None):
+    """Only allowlisted, non-personal app context may enter an external URL."""
     if collection_mode not in ('Existing library', 'Sample collection'):
         raise ValueError('Unknown collection mode')
+    if attempted_task not in (None, 'guided-book'):
+        raise ValueError('Unknown attempted task')
+    if attempted_task and collection_mode != 'Sample collection':
+        raise ValueError('The guided trial uses the sample collection only')
     version = f'Library Management Streamlit App {APP_VERSION}'
     context = f'App version: {APP_VERSION}\nCollection mode: {collection_mode}'
-    form = FEEDBACK_DESTINATION + '?' + urlencode({
+    fields = {
         'template': 'app-feedback.yml', 'versions': version,
         'collection-mode': collection_mode,
-    })
+    }
+    if attempted_task:
+        context += f'\nAttempted task: {GUIDED_TASK}'
+        fields['steps'] = GUIDED_TASK + '\nLast step reached: '
+    form = FEEDBACK_DESTINATION + '?' + urlencode(fields)
     body = (
         f'{context}\n\n'
         '## What are you reporting?\n'
@@ -46,11 +56,14 @@ def feedback_links(collection_mode):
 
 
 def show_feedback(collection_mode):
-    context, form, fallback = feedback_links(collection_mode)
+    task = 'guided-book' if (collection_mode == 'Sample collection'
+                             and st.session_state.get('trial_code')) else None
+    context, form, fallback = feedback_links(collection_mode, task)
     with st.sidebar.expander('Report a problem or share feedback'):
         st.write('Report a setup problem or tell us what happened when you tried a task.')
         st.code(context, language=None)
-        st.write('The links include only this app version and collection mode. '
+        st.write('The links include this app version, collection mode and, during a guided trial, '
+                 'a fixed description of the attempted task. '
                  'No book records, student data or local file paths are attached. '
                  'GitHub issues are public; remove personal details, secrets and paths '
                  'from anything you add. A GitHub account is needed to submit.')
@@ -71,6 +84,7 @@ def clear_collection_inputs():
         if key.startswith('form_'):
             st.session_state[key] = ''
     clear_book_query()
+    st.session_state.pop('trial_code', None)
     # A new uploader identity discards previews, even when switching back.
     st.session_state['import_generation'] = st.session_state.get('import_generation', 0) + 1
 
@@ -413,6 +427,54 @@ def deleteRecords():
             st.success("Records Deleted Successfully")
             st.write("Updated Records")
             st.dataframe(displayRec())
+def unused_trial_code(connection):
+    """Choose a free test code without modifying any saved records."""
+    codes = {row[0] for row in connection.execute('select BookCode from bookRec')}
+    number = 1
+    while f'TRY-{number:03d}' in codes:
+        number += 1
+    return f'TRY-{number:03d}'
+
+
+def show_guided_trial(selected):
+    code = st.session_state.get('trial_code')
+    if not sample_mode or not code:
+        return
+    st.subheader('Guided sample trial · Add and find a book')
+    st.write('Use test values only. This trial uses the separate sample collection. '
+             'Follow the Main Menu as usual; the guide stays with you on every page.')
+    st.write(f'1. Open **Add Books**. Enter **{TRIAL_BOOK_NAME}** in Book Name Here '
+             f'and **{code}** in Book Code Here. Click **Add Now!** once.')
+    st.write(f'2. Open **Find Books**. Enter **{code}** in Book code or title. '
+             'Look for the matching title, code and DateAdded in the results.')
+    saved = conn.execute(
+        'select BookName, BookCode, DateAdded from bookRec where BookName=? and BookCode=?',
+        (TRIAL_BOOK_NAME, code),
+    ).fetchall()
+    if saved:
+        st.success('Saved result confirmed in the sample database. '
+                   'You do not need to add this book again.')
+        st.dataframe(pd.DataFrame(saved, columns=BOOK_CSV_COLUMNS), hide_index=True)
+        st.write(f'To check persistence, stop and restart the app, choose **Sample collection**, '
+                 f'and search for **{code}** in **Find Books**. The book stays saved; '
+                 'the guide itself ends when the session ends.')
+        if selected != 'Find Books':
+            st.info('Next: open Find Books and search for the trial code to see it in the collection.')
+    else:
+        st.info('No saved trial book found yet. Follow step 1, then step 2. '
+                'If you get stuck, you can still share feedback below.')
+    _, form, fallback = feedback_links('Sample collection', 'guided-book')
+    st.write('3. Share what happened. The feedback link identifies the add-and-find task only; '
+             'it does not include your book code, saved records, inputs or local paths. '
+             'GitHub issues are public and submission needs a GitHub account. '
+             'Add the last step you reached and the result; remove personal details from anything you add.')
+    st.link_button('Share guided trial feedback', form)
+    st.link_button('Use plain issue for trial feedback', fallback)
+    if st.button('End guided trial'):
+        st.session_state.pop('trial_code', None)
+        st.rerun()
+
+
 def letter():
     st.title("Library Management Program")
     st.subheader("Dashboard")
@@ -423,16 +485,20 @@ def letter():
         menu_icon="cast",
         orientation="horizontal"
         )
+    guide = st.container()
     if selected=="Home":
         st.markdown('Library Management By Krishna Yadav')
-        if sample_mode:
-            st.subheader('Try the sample collection')
-            st.write('Add a book with code TRY-001 in Add Books. In Issue Book, use that code '
-                     'with college ID TEST-001, course Reading, and student name Sample Reader. '
-                     'Use Delete Records with TEST-001 and TRY-001 to return it before it is overdue.')
-            st.write('Stop and restart the app, then choose Sample collection again. '
-                     'Display All shows your saved book; Display Records shows any remaining issues. '
-                     'Sample books are added only on first use, not on every restart.')
+        if not st.session_state.get('trial_code'):
+            st.subheader('Try a guided sample task')
+            st.write('Add a test book, find it by code, then share what happened. '
+                     'The guide is optional and does not change saved records when you start it.')
+            if sample_mode:
+                if st.button('Start guided sample trial', type='primary'):
+                    st.session_state['trial_code'] = unused_trial_code(conn)
+                    st.rerun()
+            else:
+                st.write('Choose **Sample collection** in the sidebar, then start the trial here. '
+                         'Your existing library stays separate.')
     if selected == "Find Books":
         findBooks()
     if selected=="Issue Book":
@@ -445,6 +511,9 @@ def letter():
         addBooks()
     if selected == "About":
         st.write(" About Here! ")
+    # Fill the earlier container after page actions commit, so the saved check is current.
+    with guide:
+        show_guided_trial(selected)
 
 try:
     letter()

@@ -42,7 +42,7 @@ body:
     id: steps
     attributes:
       label: What did you try?
-      description: List setup commands or the page, inputs, and buttons used. Use test values, not personal records.
+      description: Keep the guided task description if filled by the app. Add the last step reached, or list setup commands and the pages and buttons used. Use test values, not personal records.
     validations:
       required: true
   - type: textarea
@@ -71,6 +71,7 @@ body:
       options:
         - The database included in the repository
         - A new empty database
+        - The separate sample collection
         - My own existing database
         - Not sure or the app did not start
     validations:

@@ -49,7 +49,23 @@ You can also activate the environment (`source .venv/bin/activate` on Linux or `
 
 SQLite comes with Python; there is no separate database installation or hosted account to create.
 
+## Try a guided sample task
+
+Run `streamlit run Library.py`. Choose **Sample collection** in the sidebar, then click **Start guided sample trial** on **Home**. On a narrow screen, open the sidebar first.
+
+1. The guide gives you a test title and an unused book code. In **Add Books**, enter those values and click **Add Now!** once.
+2. Open **Find Books** and search for the trial code. The guide checks the saved title and code directly in the sample database and shows the saved row, including its date. The normal search results show the book in the collection.
+3. Click **Share guided trial feedback**, even if you got stuck. The structured form identifies the add-and-find task; add your last step reached, expected result and actual result. No records, entered values, trial code or local paths are attached. A plain-issue alternative is available in the guide.
+
+See the [guided trial test record](docs/guided-trial-check.md) for checked behavior and limits.
+
+The guide is optional. Starting or ending it does not add, replace or delete records. It stays above the existing pages while active; **End guided trial** or switching collections ends it. A repeated trial picks a code that is not already saved. Book entry otherwise keeps its existing behavior, so click **Add Now!** only once to avoid duplicate entries.
+
+To check persistence, note the trial code, stop and restart the app, choose **Sample collection** again, then search for that code in **Find Books**. Saved books remain; the guide itself is session-only. Your existing `library.db` stays separate, and new sessions still default to **Existing library**.
+
 ## Try a separate sample collection
+
+For a longer manual add → issue → return walkthrough:
 
 Run `streamlit run Library.py`, then choose **Sample collection** under **Local collection** in the sidebar. On a narrow screen, open the sidebar first. This creates `library-sample.db` beside the app with three sample books. In this mode the app does not open or change `library.db`.
 
@@ -120,9 +136,9 @@ This is a lightweight local project, not a full institutional library system. Em
 
 ## Share feedback from the app
 
-Open **Report a problem or share feedback** in the sidebar on any page. On a narrow screen, open the sidebar first. The panel shows the app version (`0.3.0`) and your selected collection mode. Choose **Open GitHub feedback form** to report a setup problem, a task that failed, or feedback on a task that worked.
+Open **Report a problem or share feedback** in the sidebar on any page. On a narrow screen, open the sidebar first. The panel shows the app version (`0.4.0`) and your selected collection mode. During a guided trial, it also identifies the attempted add-and-find task. Choose **Open GitHub feedback form** to report a setup problem, a task that failed, or feedback on a task that worked.
 
-The link fills the app version and collection mode only. It never attaches book records, student data, local paths, database files, uploads or form entries. GitHub issues are public and need a GitHub account to submit. Use test values when describing steps; remove personal information, secrets and local paths from errors or screenshots you add yourself. Nothing is submitted by opening the link.
+The link fills the app version and collection mode plus a fixed task description during the guided trial. It never attaches book records, student data, local paths, database files, uploads or form entries. GitHub issues are public and need a GitHub account to submit. Use test values when describing steps; remove personal information, secrets and local paths from errors or screenshots you add yourself. Nothing is submitted by opening the link.
 
 GitHub loads issue forms from the default branch. While this change is awaiting founder review and merge, the structured form may be unavailable. Choose **Open plain GitHub issue instead** for the same reporting prompts and context. If GitHub does not prefill the context, copy it from the panel. If the app cannot start at all, use the repository feedback link under Setup help and describe the commit or download date and that the app did not start.
 
@@ -160,4 +176,4 @@ python -m pip check
 python -m unittest discover -s tests -v
 ```
 
-The 52 tests use temporary copies of the app and database. They cover ten first-run cases, nine sample-collection cases, six CSV export cases, fourteen import cases, six feedback cases, and seven book-search cases, including round trips, duplicate codes, malformed files, rollback, confirmation, persistence, isolation, privacy-safe feedback links, Unicode/literal search, empty results and clearing. Browser checks exercised the real menu, sample selection, an add → issue → restart → return flow, the narrow-screen sidebar, CSV downloads, and actual uploads and confirmations into both collections. See the [first-run test record](docs/first-run-check.md), [sample collection test record](docs/sample-collection-check.md), [CSV export test record](docs/csv-export-check.md), [CSV import test record](docs/csv-import-check.md), and [in-app feedback test record](docs/app-feedback-check.md) for scope and limits. The [book search test record](docs/book-search-check.md) covers browser searches, CSV-imported Unicode text, collection switching, empty results and phone-width use.
+The 59 tests use temporary copies of the app and database. They cover ten first-run cases, nine sample-collection cases, six CSV export cases, fourteen import cases, six feedback cases, seven book-search cases, and seven guided-trial cases, including round trips, duplicate codes, malformed files, rollback, confirmation, persistence, isolation, privacy-safe feedback links, Unicode/literal search, empty results and clearing. Browser checks exercised the real menu, sample selection, an add → issue → restart → return flow, the narrow-screen sidebar, CSV downloads, and actual uploads and confirmations into both collections. See the [first-run test record](docs/first-run-check.md), [sample collection test record](docs/sample-collection-check.md), [CSV export test record](docs/csv-export-check.md), [CSV import test record](docs/csv-import-check.md), and [in-app feedback test record](docs/app-feedback-check.md) for scope and limits. The [book search test record](docs/book-search-check.md) covers browser searches, CSV-imported Unicode text, collection switching, empty results and phone-width use.

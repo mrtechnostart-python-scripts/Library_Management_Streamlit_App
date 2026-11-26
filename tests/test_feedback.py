@@ -38,14 +38,14 @@ class FeedbackTests(unittest.TestCase):
                 app = self.app(mode)
                 self.assertFalse(app.exception)
                 self.assertEqual(app.sidebar.code[0].value,
-                                 f'App version: 0.3.0\nCollection mode: {mode}')
+                                 f'App version: 0.4.0\nCollection mode: {mode}')
                 form, fallback = self.links(app)
                 self.assertEqual(urlsplit(form).netloc, 'github.com')
                 self.assertEqual(urlsplit(form).path,
                                  '/mrtechnostart-python-scripts/Library_Management_Streamlit_App/issues/new')
                 self.assertEqual(parse_qs(urlsplit(form).query), {
                     'template': ['app-feedback.yml'],
-                    'versions': ['Library Management Streamlit App 0.3.0'],
+                    'versions': ['Library Management Streamlit App 0.4.0'],
                     'collection-mode': [mode],
                 })
                 body = parse_qs(urlsplit(fallback).query)['body'][0]
