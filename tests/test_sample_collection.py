@@ -136,17 +136,24 @@ class SampleCollectionTests(unittest.TestCase):
         self.assertFalse(self.real_path.exists())
         self.assertEqual(len(self.rows('bookRec')), 3)
 
-    def test_linked_sample_is_refused(self):
-        for link in ['symlink', 'hardlink']:
-            with self.subTest(link=link):
-                self.sample_path.unlink(missing_ok=True)
-                if link == 'symlink':
-                    self.sample_path.symlink_to(self.real_path)
-                else:
-                    os.link(self.real_path, self.sample_path)
-                app = self.page()
-                self.assertIn('separate file', app.error[0].value)
-                self.assert_isolated()
+    def test_symlinked_sample_is_refused(self):
+        try:
+            self.sample_path.symlink_to(self.real_path)
+        except OSError as error:
+            # Windows can require Developer Mode or elevated symlink privileges.
+            # Do not hide other filesystem errors or skip the hardlink check.
+            if os.name == 'nt' and getattr(error, 'winerror', None) == 1314:
+                self.skipTest('Windows symlink privilege unavailable (winerror 1314)')
+            raise
+        app = self.page()
+        self.assertIn('separate file', app.error[0].value)
+        self.assert_isolated()
+
+    def test_hardlinked_sample_is_refused(self):
+        os.link(self.real_path, self.sample_path)
+        app = self.page()
+        self.assertIn('separate file', app.error[0].value)
+        self.assert_isolated()
 
 
 if __name__ == '__main__':

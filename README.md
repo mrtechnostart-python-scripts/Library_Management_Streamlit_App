@@ -6,23 +6,46 @@ A simple local Python app built with Streamlit and SQLite. Run it to explore add
 
 ## Run locally
 
-Use **Python 3.13** with `pip` and `venv`. The setup below was tested on Linux with Python 3.13.5 in a fresh virtual environment. Other Python versions and operating systems have not been verified.
+Use **Python 3.13** with `pip` and `venv` for the recommended starting path. **Python 3.11, 3.12 and 3.13** passed fresh-install, regression and startup checks on Linux x86_64. The pinned Streamlit version requires Python 3.11 or newer; Python 3.10 and earlier cannot install it. Python 3.14 and macOS have not been tested.
 
-Clone the repository, or download and extract its ZIP. Open a terminal in the project folder:
+Windows commands and an automated Windows check are provided below. **Windows execution is pending**, not verified. See the [compatibility check record](docs/setup-check.md) for exact environments and results.
 
-```bash
+Clone the repository, or download and extract its ZIP. Open a terminal in the project folder. For a Git clone:
+
+```text
 git clone https://github.com/mrtechnostart-python-scripts/Library_Management_Streamlit_App.git
 cd Library_Management_Streamlit_App
-python3.13 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-python -m pip check
-streamlit run Library.py
 ```
+
+### Linux
+
+Install Python 3.13 with `venv` and `pip` through your Python distribution or OS package manager, then run:
+
+```bash
+python3.13 -m venv .venv
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python -m pip check
+.venv/bin/python -m streamlit run Library.py
+```
+
+If you have Python 3.11 or 3.12 instead, substitute `python3.11` or `python3.12` in the first command. The remaining commands are unchanged.
+
+### Windows PowerShell
+
+Install Python 3.13 with the Python launcher (`py`), then run:
+
+```powershell
+py -3.13 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip check
+.\.venv\Scripts\python.exe -m streamlit run Library.py
+```
+
+For Python 3.11 or 3.12, substitute `py -3.11` or `py -3.12` in the first command. These commands call the environment's Python directly, so PowerShell activation and execution-policy changes are not required. If `py` is unavailable, use the full path to your installed Python executable to create the environment.
 
 Open the **Local URL** printed in the terminal (normally `http://localhost:8501`). You should see **Library Management Program**, **Dashboard**, and the seven-page menu. Select **Add Books** to see the page pictured above. Stop the app with `Ctrl+C`.
 
-On Windows, the equivalent environment commands are `py -3.13 -m venv .venv` and `.venv\Scripts\Activate.ps1` in PowerShell. Then use the same `python -m pip …` and `streamlit run Library.py` commands. Windows setup has not been tested.
+You can also activate the environment (`source .venv/bin/activate` on Linux or `.\.venv\Scripts\Activate.ps1` in PowerShell if permitted) and use `streamlit run Library.py`.
 
 SQLite comes with Python; there is no separate database installation or hosted account to create.
 
@@ -105,20 +128,36 @@ GitHub loads issue forms from the default branch. While this change is awaiting 
 
 ## Setup help
 
-- **`streamlit` is not found:** activate `.venv` in this terminal and run `python -m pip install -r requirements.txt` again. You can also launch with `python -m streamlit run Library.py`.
-- **Installation fails:** check `python --version`. Use Python 3.13 and a new virtual environment rather than the old 2022 dependencies or an existing shared environment.
-- **Port 8501 is occupied:** run `streamlit run Library.py --server.port 8502` and open the URL printed in the terminal.
+- **`streamlit` is not found:** use the environment's Python directly as shown above (`.venv/bin/python -m streamlit …` on Linux or `.\.venv\Scripts\python.exe -m streamlit …` on Windows). This avoids PATH and activation issues.
+- **Installation fails:** check your Python version. Use Python 3.11–3.13 and a new virtual environment rather than the old 2022 dependencies or an existing shared environment. If Linux reports that `ensurepip` or `venv` is missing, install the matching Python venv package through your OS package manager. Package names vary by distribution.
+- **Port 8501 is occupied:** append `--server.port 8502` to your launch command and open the URL printed in the terminal.
 - **The database is read-only:** move your evaluation copy into a folder your user can write to. SQLite needs to write beside `Library.py`.
 
 [Report a setup failure or share feedback on a task](https://github.com/mrtechnostart-python-scripts/Library_Management_Streamlit_App/issues/new?template=app-feedback.yml). The GitHub form asks for your environment, steps, expected result, actual result, and relevant error messages. A GitHub account is needed to submit it. Leave out personal records and secrets.
 
 ## Checks for contributors
 
-With the virtual environment activated:
+Run the full fresh-install check with the Python version you want to evaluate. No activated environment or preinstalled app packages are needed:
+
+```bash
+# Linux (repeat with python3.11 or python3.12 to check those versions)
+python3.13 scripts/check_setup.py
+```
+
+```powershell
+# Windows PowerShell (repeat with py -3.11 or py -3.12)
+py -3.13 scripts/check_setup.py
+```
+
+The command creates a disposable virtual environment, installs `requirements.txt`, runs `pip check` and the regression suite, executes the app from an unrelated folder, and starts the real Streamlit server. It checks the health endpoint and HTML page, stops the server, removes temporary files and verifies the supplied database's SHA-256 is unchanged. It needs network access to download packages and permission to create temporary files and bind a local port. Failures return a nonzero exit code. Add `--report setup-result.json` to save the successful environment and installed package versions (no collection records).
+
+The [GitHub Actions template](docs/ci/setup-check.yml) prepares the same check for Windows and Linux with Python 3.11, 3.12 and 3.13. Hosted results are pending: Brainer's GitHub connection cannot write active workflows. The founder must copy this template to `.github/workflows/setup-check.yml` using their own GitHub permissions, then enable or approve Actions if required. Each successful job saves a version report. A green server health check alone does not mean the app ran: AppTest execution and the regression suite check that separately. See the [compatibility check record](docs/setup-check.md).
+
+For a faster regression-only run, with the virtual environment activated:
 
 ```bash
 python -m pip check
 python -m unittest discover -s tests -v
 ```
 
-The 51 tests use temporary copies of the app and database. They cover ten first-run cases, eight sample-collection cases, six CSV export cases, fourteen import cases, six feedback cases, and seven book-search cases, including round trips, duplicate codes, malformed files, rollback, confirmation, persistence, isolation, privacy-safe feedback links, Unicode/literal search, empty results and clearing. Browser checks exercised the real menu, sample selection, an add → issue → restart → return flow, the narrow-screen sidebar, CSV downloads, and actual uploads and confirmations into both collections. See the [first-run test record](docs/first-run-check.md), [sample collection test record](docs/sample-collection-check.md), [CSV export test record](docs/csv-export-check.md), [CSV import test record](docs/csv-import-check.md), and [in-app feedback test record](docs/app-feedback-check.md) for scope and limits. The [book search test record](docs/book-search-check.md) covers browser searches, CSV-imported Unicode text, collection switching, empty results and phone-width use.
+The 52 tests use temporary copies of the app and database. They cover ten first-run cases, nine sample-collection cases, six CSV export cases, fourteen import cases, six feedback cases, and seven book-search cases, including round trips, duplicate codes, malformed files, rollback, confirmation, persistence, isolation, privacy-safe feedback links, Unicode/literal search, empty results and clearing. Browser checks exercised the real menu, sample selection, an add → issue → restart → return flow, the narrow-screen sidebar, CSV downloads, and actual uploads and confirmations into both collections. See the [first-run test record](docs/first-run-check.md), [sample collection test record](docs/sample-collection-check.md), [CSV export test record](docs/csv-export-check.md), [CSV import test record](docs/csv-import-check.md), and [in-app feedback test record](docs/app-feedback-check.md) for scope and limits. The [book search test record](docs/book-search-check.md) covers browser searches, CSV-imported Unicode text, collection switching, empty results and phone-width use.

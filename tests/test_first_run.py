@@ -48,7 +48,7 @@ class FirstRunTests(unittest.TestCase):
         return app
 
     def test_all_pages_open_without_a_database(self):
-        for name in ['Home', 'Add Books', 'Delete Books', 'Issue Book', 'Delete Records', 'About']:
+        for name in ['Home', 'Find Books', 'Add Books', 'Delete Books', 'Issue Book', 'Delete Records', 'About']:
             with self.subTest(page=name):
                 self.db_path.unlink(missing_ok=True)
                 self.page(name)

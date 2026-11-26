@@ -7,3 +7,5 @@ __pycache__/
 *.db-shm
 # Local evaluator collection; never commit sample edits or patron records.
 library-sample.db
+# Optional fresh-install environment report; curated evidence lives in docs/setup-results.
+setup-result.json
