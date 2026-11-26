@@ -1,0 +1,35 @@
+name: Fresh install and startup
+
+on:
+  pull_request:
+  push:
+    branches: [master, brainer/work]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ['3.11', '3.12', '3.13']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Fresh environment, regressions and Streamlit startup
+        run: python scripts/check_setup.py --report setup-result.json
+      - name: Save environment evidence
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: setup-${{ matrix.os }}-python-${{ matrix.python }}
+          path: setup-result.json
+          retention-days: 14

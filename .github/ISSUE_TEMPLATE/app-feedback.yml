@@ -1,0 +1,78 @@
+name: App setup or task feedback
+description: Report a local setup failure or tell us what happened when you tried a library task.
+title: "[Feedback]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying Library Management Streamlit App. Include enough detail to repeat the problem. GitHub issues are public. Do not share book records, patron or student details, passwords, local file paths, or your database file.
+  - type: dropdown
+    id: feedback-type
+    attributes:
+      label: What are you reporting?
+      options:
+        - Setup or startup failure
+        - A library task did not work as expected
+        - Feedback on a task that worked
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Operating system and Python version
+      description: Include your OS version and the output of python --version.
+      placeholder: "Ubuntu 24.04, Python 3.13.5"
+    validations:
+      required: true
+  - type: textarea
+    id: versions
+    attributes:
+      label: App revision and dependency versions
+      description: Keep the app version filled by the app link, or copy it from the sidebar feedback panel. Include the commit or download date if known and the output of python -m pip show streamlit pandas streamlit-option-menu, if installation completed.
+    validations:
+      required: true
+  - type: input
+    id: collection-mode
+    attributes:
+      label: Selected collection mode
+      description: Keep the mode filled by the app link, or enter Existing library, Sample collection, or App did not start.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: What did you try?
+      description: Keep the guided task description if filled by the app. Add the last step reached, or list setup commands and the pages and buttons used. Use test values, not personal records.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What actually happened?
+      description: Include the last working step and whether the result changed after restarting the app.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error messages or screenshots
+      description: Paste the terminal or app error, if there is one. Remove personal information and secrets first.
+      render: text
+  - type: dropdown
+    id: database
+    attributes:
+      label: Which database did you use?
+      options:
+        - The database included in the repository
+        - A new empty database
+        - The separate sample collection
+        - My own existing database
+        - Not sure or the app did not start
+    validations:
+      required: true

@@ -1,0 +1,155 @@
+{
+  "platform": "Linux-6.8.0-86-generic-x86_64-with-glibc2.41",
+  "python": "3.12.16",
+  "packages": [
+    {
+      "name": "altair",
+      "version": "6.3.0"
+    },
+    {
+      "name": "anyio",
+      "version": "4.16.0"
+    },
+    {
+      "name": "attrs",
+      "version": "26.1.0"
+    },
+    {
+      "name": "certifi",
+      "version": "2026.11.20"
+    },
+    {
+      "name": "charset-normalizer",
+      "version": "3.5.3"
+    },
+    {
+      "name": "click",
+      "version": "8.5.1"
+    },
+    {
+      "name": "h11",
+      "version": "0.16.0"
+    },
+    {
+      "name": "idna",
+      "version": "3.20"
+    },
+    {
+      "name": "itsdangerous",
+      "version": "2.2.0"
+    },
+    {
+      "name": "Jinja2",
+      "version": "3.1.6"
+    },
+    {
+      "name": "jsonschema",
+      "version": "4.26.0"
+    },
+    {
+      "name": "jsonschema-specifications",
+      "version": "2025.9.1"
+    },
+    {
+      "name": "MarkupSafe",
+      "version": "3.0.4"
+    },
+    {
+      "name": "narwhals",
+      "version": "2.29.0"
+    },
+    {
+      "name": "numpy",
+      "version": "2.5.5"
+    },
+    {
+      "name": "packaging",
+      "version": "26.4"
+    },
+    {
+      "name": "pandas",
+      "version": "2.3.3"
+    },
+    {
+      "name": "pillow",
+      "version": "13.0.0"
+    },
+    {
+      "name": "pip",
+      "version": "26.3"
+    },
+    {
+      "name": "protobuf",
+      "version": "7.36.2"
+    },
+    {
+      "name": "pyarrow",
+      "version": "26.0.1"
+    },
+    {
+      "name": "pydeck",
+      "version": "0.9.3"
+    },
+    {
+      "name": "python-dateutil",
+      "version": "4.0.0"
+    },
+    {
+      "name": "python-multipart",
+      "version": "0.0.34"
+    },
+    {
+      "name": "pytz",
+      "version": "2026.6"
+    },
+    {
+      "name": "referencing",
+      "version": "0.37.0"
+    },
+    {
+      "name": "requests",
+      "version": "2.34.2"
+    },
+    {
+      "name": "rpds-py",
+      "version": "2026.9.1"
+    },
+    {
+      "name": "starlette",
+      "version": "1.10.0"
+    },
+    {
+      "name": "streamlit",
+      "version": "1.67.0"
+    },
+    {
+      "name": "streamlit-option-menu",
+      "version": "0.4.0"
+    },
+    {
+      "name": "typing_extensions",
+      "version": "4.16.0"
+    },
+    {
+      "name": "tzdata",
+      "version": "2026.6"
+    },
+    {
+      "name": "urllib3",
+      "version": "2.8.0"
+    },
+    {
+      "name": "uvicorn",
+      "version": "0.54.0"
+    },
+    {
+      "name": "watchdog",
+      "version": "7.1.1"
+    },
+    {
+      "name": "websockets",
+      "version": "17.4"
+    }
+  ],
+  "result": "passed"
+}

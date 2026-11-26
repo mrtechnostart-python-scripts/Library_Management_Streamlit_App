@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.py[cod]
+# The existing library.db is tracked; keep newly created local DB sidecars private.
+*.db-journal
+*.db-wal
+*.db-shm
+# Local evaluator collection; never commit sample edits or patron records.
+library-sample.db
+# Optional fresh-install environment report; curated evidence lives in docs/setup-results.
+setup-result.json
